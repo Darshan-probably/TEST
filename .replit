@@ -1,0 +1,31 @@
+run = "cd backend && python main.py"
+entrypoint = "backend/main.py"
+
+[nix]
+channel = "stable-22_11"
+
+[env]
+PORT = "8080"
+PYTHONPATH = "${PYTHONPATH}:${REPL_HOME}"
+
+[languages.python]
+pattern = "**/*.py"
+syntax = "python"
+
+[languages.javascript]
+pattern = "**/*.{js,jsx}"
+syntax = "javascript"
+
+[languages.html]
+pattern = "**/*.html"
+syntax = "html"
+
+[packager]
+language = "python3"
+
+[packager.features]
+packageSearch = true
+guessImports = true
+
+[unitTest]
+language = "python3"
