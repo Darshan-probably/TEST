@@ -5,56 +5,23 @@ from typing import Optional, List, Union
 import shutil
 import os
 import uuid
-import tempfile
-import base64
 from pathlib import Path
 from invoice_processor import InvoiceProcessor
 import openpyxl
-import io
-# In main.py, add:
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-
-# Mount static files from the React build
 
 # Create app
 app = FastAPI(title="Invoice Processor")
 
-UPLOAD_DIR = Path("backend/uploads")
-OUTPUT_DIR = Path("backend/outputs")
-STATIC_DIR = Path("backend/static")
-REACT_BUILD_DIR = Path("frontend/build")  # Path to React build directory
+UPLOAD_DIR = Path("uploads")
+OUTPUT_DIR = Path("outputs")
+REACT_BUILD_DIR = Path("../frontend/build")  # Path to React build directory
 
 # Ensure directories exist
-for directory in [UPLOAD_DIR, OUTPUT_DIR, STATIC_DIR]:
+for directory in [UPLOAD_DIR, OUTPUT_DIR]:
     directory.mkdir(exist_ok=True)
 
 # Mount React static files
-if REACT_BUILD_DIR.exists():
-    app.mount("/static", StaticFiles(directory=REACT_BUILD_DIR), name="static")
-
-@app.get("/{full_path:path}")
-async def serve_react_app(full_path: str):
-    return FileResponse(os.path.join(REACT_BUILD_DIR, "index.html"))
-
-
-# Create index.html if it doesn't exist
-INDEX_PATH = STATIC_DIR / "index.html"
-if not INDEX_PATH.exists():
-    with open(INDEX_PATH, "w") as f:
-        f.write("""<!DOCTYPE html>
-<html>
-<head>
-    <title>Invoice Processor</title>
-    <meta http-equiv="refresh" content="0;url=/">
-</head>
-<body>
-    <p>Redirecting...</p>
-</body>
-</html>""")
-
-# Mount static files directory
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=REACT_BUILD_DIR / "static"), name="static")
 
 # Clean up old files periodically
 def cleanup_old_files():
@@ -69,12 +36,6 @@ def cleanup_old_files():
                 file_age = current_time - file_path.stat().st_mtime
                 if file_age > one_hour:
                     file_path.unlink()
-
-@app.get("/", response_class=HTMLResponse)
-async def get_upload_page():
-    """Return the main HTML page"""
-    with open(INDEX_PATH, "r") as file:
-        return file.read()
 
 def convert_xlsx_to_preview_data(xlsx_path, max_rows=20):
     """
@@ -282,8 +243,16 @@ async def download_file(filename: str):
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
+# Serve the React app for all other routes
+@app.get("/{full_path:path}")
+async def serve_react_app(full_path: str):
+    index_path = REACT_BUILD_DIR / "index.html"
+    if not index_path.exists():
+        raise HTTPException(status_code=404, detail="React build not found. Run 'npm run build' in the frontend directory.")
+    return FileResponse(index_path)
+
 # For Replit compatibility
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("main:app",port=port, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
