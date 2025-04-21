@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, UploadFile, File, Form, Query, HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -83,17 +84,19 @@ async def preview_invoice_upload(
     file: UploadFile = File(...),
     bags: Optional[str] = Form(None),
     weight: Optional[str] = Form(None),
-    font_size: Optional[str] = Form(None),
-    font_name: Optional[str] = Form(None),
     min_percent: Optional[str] = Form("-2"),
     max_percent: Optional[str] = Form("2"),
-    preserve_wrapping: Optional[str] = Form("true")
+    preserve_wrapping: Optional[str] = Form("true"),
+    template_type: Optional[str] = Form(None),
+    date: Optional[str] = Form(None),
+    address: Optional[str] = Form(None),
+    lot_number: Optional[str] = Form(None),
+    name: Optional[str] = Form(None)
 ):
     """API endpoint to preview processed invoice file"""
     # Convert form values to appropriate types
     bags_int = int(bags) if bags and bags.strip() else None
     weight_float = float(weight) if weight and weight.strip() else None
-    font_size_int = int(font_size) if font_size and font_size.strip() else None
     min_percent_float = float(min_percent) if min_percent else -2
     max_percent_float = float(max_percent) if max_percent else 2
     preserve_wrapping_bool = preserve_wrapping.lower() == "true" if preserve_wrapping else True
@@ -117,8 +120,7 @@ async def preview_invoice_upload(
         config = {
             'min_percent': min_percent_float,
             'max_percent': max_percent_float,
-            'font_size': font_size_int,
-            'font_name': font_name,
+            'font_size': 9,  # Set default font size to 9
             'preserve_wrapping': preserve_wrapping_bool
         }
         
@@ -139,11 +141,14 @@ async def preview_invoice_upload(
         preview_data["config"] = {
             "bags": bags_int,
             "weight": weight_float,
-            "fontSize": font_size_int,
-            "fontName": font_name,
             "minPercent": min_percent_float,
             "maxPercent": max_percent_float,
-            "preserveWrapping": preserve_wrapping_bool
+            "preserveWrapping": preserve_wrapping_bool,
+            "templateType": template_type,
+            "date": date,
+            "address": address,
+            "lotNumber": lot_number,
+            "name": name
         }
         
         # Include original and processed file IDs for later downloading
@@ -166,11 +171,14 @@ async def process_invoice_upload(
     file: UploadFile = File(...),
     bags: Optional[str] = Form(None),
     weight: Optional[str] = Form(None),
-    font_size: Optional[str] = Form(None),
-    font_name: Optional[str] = Form(None),
     min_percent: Optional[str] = Form("-2"),
     max_percent: Optional[str] = Form("2"),
-    preserve_wrapping: Optional[str] = Form("true")
+    preserve_wrapping: Optional[str] = Form("true"),
+    template_type: Optional[str] = Form(None),
+    date: Optional[str] = Form(None),
+    address: Optional[str] = Form(None),
+    lot_number: Optional[str] = Form(None),
+    name: Optional[str] = Form(None)
 ):
     """API endpoint to process uploaded invoice file"""
     # Clean up old files
@@ -179,7 +187,6 @@ async def process_invoice_upload(
     # Convert form values to appropriate types
     bags_int = int(bags) if bags and bags.strip() else None
     weight_float = float(weight) if weight and weight.strip() else None
-    font_size_int = int(font_size) if font_size and font_size.strip() else None
     min_percent_float = float(min_percent) if min_percent else -2
     max_percent_float = float(max_percent) if max_percent else 2
     preserve_wrapping_bool = preserve_wrapping.lower() == "true" if preserve_wrapping else True
@@ -203,8 +210,7 @@ async def process_invoice_upload(
         config = {
             'min_percent': min_percent_float,
             'max_percent': max_percent_float,
-            'font_size': font_size_int,
-            'font_name': font_name,
+            'font_size': 9,  # Default font size set to 9
             'preserve_wrapping': preserve_wrapping_bool
         }
         
