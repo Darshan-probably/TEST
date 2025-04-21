@@ -13,7 +13,7 @@ export default function InvoiceUploadForm() {
   const [downloadUrl, setDownloadUrl] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   
-  // New fields
+  // Fields for document info
   const [templateType, setTemplateType] = useState('default');
   const [date, setDate] = useState('');
   const [address, setAddress] = useState('');
@@ -52,7 +52,7 @@ export default function InvoiceUploadForm() {
     formData.append('max_percent', maxPercent);
     formData.append('preserve_wrapping', preserveWrapping.toString());
     
-    // Append new fields if they have values
+    // Append optional fields if they have values
     if (templateType !== 'default') formData.append('template_type', templateType);
     if (date) formData.append('date', date);
     if (address) formData.append('address', address);
