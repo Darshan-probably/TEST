@@ -46,24 +46,14 @@ export default function InvoiceProcessorVisualization() {
               <h3 className="text-lg font-semibold">Upload Invoice Excel File</h3>
               <p className="text-gray-600 text-center mt-2">User uploads an Excel invoice file via the web interface</p>
             </div>
-            <div className="bg-gray-100 p-4 rounded border border-gray-300 w-full max-w-md">
-              <div className="flex justify-between items-center text-sm mb-2">
-                <span className="font-medium">main.py</span>
-                <span className="text-gray-500">FastAPI Handler</span>
-              </div>
-              <pre className="text-xs bg-gray-800 text-green-400 p-2 rounded overflow-x-auto">
-{`@app.post("/process/")
-async def process_invoice_upload(
-    background_tasks: BackgroundTasks,
-    file: UploadFile = File(...),
-    # Other parameters omitted for brevity
-):
-    # Save uploaded file
-    input_filename = UPLOAD_DIR / f"{unique_id}_{file.filename}"
-    with open(input_filename, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    # ...`}
-              </pre>
+            <div className="bg-blue-50 p-4 rounded border border-blue-200 w-full max-w-md">
+              <h4 className="font-medium text-blue-700 mb-2">System Actions</h4>
+              <ul className="text-sm text-blue-800 list-disc pl-5 space-y-1">
+                <li>Receives uploaded Excel file</li>
+                <li>Validates file format and extension</li>
+                <li>Assigns unique ID for processing</li>
+                <li>Stores file temporarily for processing</li>
+              </ul>
             </div>
           </div>
         )}
@@ -76,12 +66,24 @@ async def process_invoice_upload(
               <div className="mt-4 w-full">
                 <div className="flex flex-col gap-2">
                   <div className="flex justify-between">
+                    <span className="text-sm font-medium">Template Type:</span>
+                    <span className="text-sm text-gray-600">Default</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-sm font-medium">Number of Bags:</span>
                     <span className="text-sm text-gray-600">25</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Total Weight (kg):</span>
                     <span className="text-sm text-gray-600">1000.50</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Date:</span>
+                    <span className="text-sm text-gray-600">2025-04-21</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium">Lot Number:</span>
+                    <span className="text-sm text-gray-600">LN-123456</span>
                   </div>
                   <button 
                     onClick={() => setShowAdvanced(!showAdvanced)}
@@ -93,10 +95,6 @@ async def process_invoice_upload(
                   
                   {showAdvanced && (
                     <div className="bg-gray-50 p-3 rounded border border-gray-200 mt-2">
-                      <div className="flex justify-between text-xs">
-                        <span>Font Size: <b>11</b></span>
-                        <span>Font Name: <b>Arial</b></span>
-                      </div>
                       <div className="flex justify-between text-xs mt-2">
                         <span>Min Variation: <b>-2%</b></span>
                         <span>Max Variation: <b>2%</b></span>
@@ -127,42 +125,17 @@ async def process_invoice_upload(
               <p className="text-gray-600 text-center mt-2">The system processes the Excel file</p>
             </div>
             
-            <div className="flex w-full gap-4">
-              <div className="bg-gray-100 p-4 rounded border border-gray-300 flex-1">
-                <div className="flex justify-between items-center text-sm mb-2">
-                  <span className="font-medium">invoice_processor.py</span>
-                  <span className="text-gray-500">Processing Logic</span>
-                </div>
-                <pre className="text-xs bg-gray-800 text-green-400 p-2 rounded overflow-x-auto">
-{`def process_file(self, file_path, output_path=None):
-    # Load workbook
-    wb = openpyxl.load_workbook(file_path)
-    ws = wb.active
-    
-    # Get bag count
-    bag_count = self.config['bag_count']
-    
-    # Calculate needed rows and insert if necessary
-    available_rows = self.config['total_row'] - self.config['start_row']
-    rows_needed = max(0, bag_count - available_rows)
-    
-    # Insert rows if needed
-    if rows_needed > 0:
-        self.insert_rows_preserving_merges(...)
-        
-    # Generate and apply new weights with variation
-    weights = self.distribute_weight(
-        self.config['target_weight'],
-        bag_count,
-        self.config['min_percent'],
-        self.config['max_percent']
-    )
-    
-    # Apply formatting and save
-    wb.save(output_path)
-    return output_path`}
-                </pre>
-              </div>
+            <div className="bg-blue-50 p-4 rounded border border-blue-200 w-full max-w-md">
+              <h4 className="font-medium text-blue-700 mb-2">Processing Steps</h4>
+              <ol className="text-sm text-blue-800 list-decimal pl-5 space-y-2">
+                <li>Load Excel workbook</li>
+                <li>Determine the number of bags (from input or detect)</li>
+                <li>Insert additional rows if needed</li>
+                <li>Calculate weight distribution with variation</li>
+                <li>Apply updated values and formatting</li>
+                <li>Add document information (date, lot number, etc.)</li>
+                <li>Save as new Excel file</li>
+              </ol>
             </div>
           </div>
         )}
