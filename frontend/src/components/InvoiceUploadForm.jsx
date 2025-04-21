@@ -6,14 +6,19 @@ export default function InvoiceUploadForm() {
   const [bags, setBags] = useState('');
   const [weight, setWeight] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [fontSize, setFontSize] = useState('');
-  const [fontName, setFontName] = useState('');
   const [minPercent, setMinPercent] = useState('-2');
   const [maxPercent, setMaxPercent] = useState('2');
   const [preserveWrapping, setPreserveWrapping] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  
+  // New fields
+  const [templateType, setTemplateType] = useState('default');
+  const [date, setDate] = useState('');
+  const [address, setAddress] = useState('');
+  const [lotNumber, setLotNumber] = useState('');
+  const [name, setName] = useState('');
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -41,11 +46,18 @@ export default function InvoiceUploadForm() {
     formData.append('file', file);
     if (bags) formData.append('bags', bags);
     if (weight) formData.append('weight', weight);
-    if (fontSize) formData.append('font_size', fontSize);
-    if (fontName) formData.append('font_name', fontName);
+    // Default font size is set to 9 in the backend
+    formData.append('font_size', '9');
     formData.append('min_percent', minPercent);
     formData.append('max_percent', maxPercent);
     formData.append('preserve_wrapping', preserveWrapping.toString());
+    
+    // Append new fields if they have values
+    if (templateType !== 'default') formData.append('template_type', templateType);
+    if (date) formData.append('date', date);
+    if (address) formData.append('address', address);
+    if (lotNumber) formData.append('lot_number', lotNumber);
+    if (name) formData.append('name', name);
 
     try {
       const response = await fetch('/process/', {
@@ -102,6 +114,28 @@ export default function InvoiceUploadForm() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Template Selection */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="font-medium mb-4">Template Selection</h3>
+            <div className="grid grid-cols-1 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Select Template Type
+                </label>
+                <select
+                  value={templateType}
+                  onChange={(e) => setTemplateType(e.target.value)}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="default">Default Template</option>
+                  <option value="invoice1">Invoice Template 1</option>
+                  <option value="invoice2">Invoice Template 2</option>
+                  <option value="custom">Custom Template</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
             <input
               type="file"
@@ -158,6 +192,62 @@ export default function InvoiceUploadForm() {
               </div>
             </div>
             
+            {/* Document Information */}
+            <div className="mb-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Document Information (Optional)</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">
+                    Lot Number
+                  </label>
+                  <input
+                    type="text"
+                    value={lotNumber}
+                    onChange={(e) => setLotNumber(e.target.value)}
+                    className="w-full p-2 border rounded"
+                    placeholder="Enter lot number"
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-3">
+                <label className="block text-xs text-gray-600 mb-1">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full p-2 border rounded"
+                  placeholder="Enter name"
+                />
+              </div>
+              
+              <div className="mt-3">
+                <label className="block text-xs text-gray-600 mb-1">
+                  Address
+                </label>
+                <textarea
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="w-full p-2 border rounded"
+                  placeholder="Enter address"
+                  rows="2"
+                />
+              </div>
+            </div>
+            
             <div className="mb-4">
               <button 
                 type="button"
@@ -170,34 +260,7 @@ export default function InvoiceUploadForm() {
             </div>
             
             {showAdvanced && (
-              <div className="bg-white p-4 rounded border border-gray-200 mb-4 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Font Size
-                    </label>
-                    <input
-                      type="number"
-                      value={fontSize}
-                      onChange={(e) => setFontSize(e.target.value)}
-                      className="w-full p-2 border rounded"
-                      placeholder="Default"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Font Name
-                    </label>
-                    <input
-                      type="text"
-                      value={fontName}
-                      onChange={(e) => setFontName(e.target.value)}
-                      className="w-full p-2 border rounded"
-                      placeholder="Default"
-                    />
-                  </div>
-                </div>
-                
+              <div className="bg-white p-4 rounded border border-gray-200 mb-4 space-y-4">                
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
