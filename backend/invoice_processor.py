@@ -5,6 +5,7 @@ from openpyxl.styles import Alignment, Font
 import random
 import re
 import copy
+from datetime import datetime
 
 class InvoiceProcessor:
     """
@@ -21,10 +22,14 @@ class InvoiceProcessor:
             'min_percent': -2,
             'max_percent': 2,
             'target_weight': None,
-            'font_size': None,
-            'font_name': None,
+            'font_size': 9,  # Default to 9
             'bag_count': None,
-            'preserve_wrapping': True  # Default to preserving wrapping
+            'preserve_wrapping': True,  # Default to preserving wrapping
+            'template_type': 'default',
+            'date': None,
+            'address': None,
+            'lot_number': None,
+            'name': None
         }
         
         if config:
@@ -275,6 +280,40 @@ class InvoiceProcessor:
             
         return f"{bag_count_cell[0]}{original_row + rows_added}"
     
+    def update_document_info(self, ws):
+        """Update document information fields if provided in config"""
+        # Placeholder implementation - will need to be customized per template
+        template_type = self.config['template_type']
+        
+        # Example: Update date if provided (cell A4 in default template)
+        if self.config['date']:
+            date_value = self.config['date']
+            try:
+                # Try to parse as date if it's a string
+                if isinstance(date_value, str):
+                    date_obj = datetime.strptime(date_value, '%Y-%m-%d')
+                    self.set_mergecell_value(ws, 'A4', date_obj)
+                else:
+                    self.set_mergecell_value(ws, 'A4', date_value)
+            except:
+                # If parsing fails, use as is
+                self.set_mergecell_value(ws, 'A4', date_value)
+        
+        # Example: Update lot number if provided (cell B4 in default template)
+        if self.config['lot_number']:
+            self.set_mergecell_value(ws, 'B4', self.config['lot_number'])
+        
+        # Example: Update name if provided (cell C3 in default template)
+        if self.config['name']:
+            self.set_mergecell_value(ws, 'C3', self.config['name'])
+        
+        # Example: Update address if provided (cell C4 in default template)
+        if self.config['address']:
+            self.set_mergecell_value(ws, 'C4', self.config['address'])
+            
+        # Note: These are placeholders - actual cell references should be 
+        # determined based on the specific template being used
+    
     def process_file(self, file_path, output_path=None):
         """Process invoice Excel file with current configuration"""
         wb = openpyxl.load_workbook(file_path)
@@ -331,20 +370,24 @@ class InvoiceProcessor:
             # Apply formatting
             target_cell = ws[cell]
             target_cell.alignment = Alignment(horizontal='right')
-            if self.config['font_size'] or self.config['font_name']:
-                current_font = target_cell.font
-                font = Font(
-                    name=self.config['font_name'] or current_font.name,
-                    size=self.config['font_size'] or current_font.size,
-                    bold=current_font.bold,
-                    italic=current_font.italic
-                )
-                target_cell.font = font
+            
+            # Use fixed font size of 9
+            current_font = target_cell.font
+            font = Font(
+                name=current_font.name,
+                size=self.config['font_size'],
+                bold=current_font.bold,
+                italic=current_font.italic
+            )
+            target_cell.font = font
         
         # Update total and bag count
         self.set_mergecell_value(ws, updated_bag_count_cell, f"{bag_count} Bags")
         total_cell = f"{self.config['weight_column']}{self.config['total_row']}"
         self.set_mergecell_value(ws, total_cell, sum(weights))
+        
+        # Update document info if template and fields are provided
+        self.update_document_info(ws)
         
         # Save the result
         wb.save(output_path)
