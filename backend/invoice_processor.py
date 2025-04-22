@@ -1,5 +1,4 @@
 # invoice_processor.py
-
 import openpyxl
 from openpyxl.styles import Alignment, Font
 import random
