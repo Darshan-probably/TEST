@@ -248,11 +248,14 @@ async def process_invoice_upload(
         # Schedule cleanup task
         background_tasks.add_task(cleanup_old_files)
         
-        # Return download URL
+        # Return download URL and file path
         file_name = os.path.basename(output_path)
         download_url = f"/download/{file_name}"
         
-        return {"download_url": download_url}
+        return {
+            "download_url": download_url,
+            "file_path": str(output_path)  # Include the file path in the response
+        }
         
     except Exception as e:
         # Handle any errors
