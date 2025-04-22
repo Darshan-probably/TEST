@@ -9,12 +9,13 @@ import uuid
 from pathlib import Path
 from invoice_processor import InvoiceProcessor
 import openpyxl
+from config import get_app_setting, API_ENDPOINTS
 
 # Create app
 app = FastAPI(title="Invoice Processor")
 
-UPLOAD_DIR = Path("uploads")
-OUTPUT_DIR = Path("outputs")
+UPLOAD_DIR = Path(get_app_setting('upload_dir'))
+OUTPUT_DIR = Path(get_app_setting('output_dir'))
 REACT_BUILD_DIR = Path("../frontend/build")  # Path to React build directory
 
 # Ensure directories exist
