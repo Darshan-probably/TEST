@@ -5,31 +5,11 @@ import random
 import re
 import copy
 from datetime import datetime
+from config import get_template_config
 
 class InvoiceProcessor:
-    """
-    Core logic for processing invoice Excel files with weight distributions
-    """
-    
     def __init__(self, config=None):
-        """Initialize with default configuration or custom settings"""
-        self.config = {
-            'weight_column': 'G',
-            'start_row': 8,
-            'total_row': 38,
-            'bag_count_cell': 'C38',
-            'min_percent': -2,
-            'max_percent': 2,
-            'target_weight': None,
-            'font_size': 9,  # Default to 9
-            'bag_count': None,
-            'preserve_wrapping': True,  # Default to preserving wrapping
-            'template_type': 'default',
-            'date': None,
-            'address': None,
-            'lot_number': None,
-            'name': None
-        }
+        self.config = get_template_config(config.get('template_type', 'default') if config else 'default')
         
         if config:
             self.config.update(config)
