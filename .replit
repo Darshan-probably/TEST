@@ -29,3 +29,23 @@ guessImports = true
 
 [unitTest]
 language = "python3"
+
+[workflows]
+runButton = "Setup and Run"
+
+[[workflows.workflow]]
+name = "Setup and Run"
+mode = "sequential"
+author = 37192337
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "sh setup.sh"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd backend && python main.py"
+
+[[ports]]
+localPort = 8080
+externalPort = 80
