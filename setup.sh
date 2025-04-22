@@ -23,4 +23,4 @@ else
 fi
 
 echo "Setup complete!"
-echo "Run the application with: python backend/main.py"
+echo "Run the application with: cd backend && python main.py"
