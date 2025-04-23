@@ -1,4 +1,4 @@
-#main.py
+# main.py
 from fastapi import FastAPI, UploadFile, File, Form, Query, HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -8,11 +8,12 @@ import os
 import uuid
 from pathlib import Path
 from invoice_processor import InvoiceProcessor
+from xlsx_to_pdf_converter import XlsxToPdfConverter
 import openpyxl
 from config import get_app_setting, API_ENDPOINTS
 
 # Create app
-app = FastAPI(title="Invoice Processor")
+app = FastAPI(title="Excel Processor")
 
 UPLOAD_DIR = Path(get_app_setting('upload_dir'))
 OUTPUT_DIR = Path(get_app_setting('output_dir'))
@@ -197,7 +198,9 @@ async def process_invoice_upload(
     date: Optional[str] = Form(None),
     address: Optional[str] = Form(None),
     lot_number: Optional[str] = Form(None),
-    name: Optional[str] = Form(None)
+    name: Optional[str] = Form(None),
+    # New PDF options
+    output_format: Optional[str] = Form("xlsx")  # "xlsx" or "pdf"
 ):
     """API endpoint to process invoice file and provide download"""
     # Convert form values to appropriate types
@@ -216,7 +219,10 @@ async def process_invoice_upload(
         
         # Save uploaded file
         input_filename = UPLOAD_DIR / f"{unique_id}_{file.filename}"
-        output_filename = OUTPUT_DIR / f"{unique_id}_{file.filename.replace('.xlsx', '_processed.xlsx')}"
+        
+        # Determine output filename based on format
+        output_xlsx = OUTPUT_DIR / f"{unique_id}_{file.filename.replace('.xlsx', '_processed.xlsx')}"
+        output_pdf = OUTPUT_DIR / f"{unique_id}_{file.filename.replace('.xlsx', '_processed.pdf')}"
         
         with open(input_filename, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
@@ -243,7 +249,108 @@ async def process_invoice_upload(
         
         # Process file
         processor = InvoiceProcessor(config)
-        output_path = processor.process_file(str(input_filename), str(output_filename))
+        processed_xlsx_path = processor.process_file(str(input_filename), str(output_xlsx))
+        
+        # If PDF output requested, convert to PDF
+        if output_format.lower() == "pdf":
+            # Create PDF converter with configuration
+            converter_config = {
+                'include_header': True,
+                'include_footer': True,
+                'preserve_formatting': True,
+                'footer_text': f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+            }
+            converter = XlsxToPdfConverter(converter_config)
+            
+            # Convert processed Excel file to PDF
+            output_path = converter.convert(processed_xlsx_path, str(output_pdf))
+            file_name = os.path.basename(output_path)
+            media_type = "application/pdf"
+        else:
+            # Use Excel output
+            output_path = processed_xlsx_path
+            file_name = os.path.basename(output_path)
+            media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        
+        # Schedule cleanup task
+        background_tasks.add_task(cleanup_old_files)
+        
+        # Return download URL and file path
+        download_url = f"/download/{file_name}"
+        
+        return {
+            "download_url": download_url,
+            "file_path": str(output_path),
+            "format": output_format.lower()
+        }
+        
+    except Exception as e:
+        # Handle any errors
+        if input_filename.exists():
+            try:
+                input_filename.unlink()
+            except:
+                pass
+                
+        if output_xlsx.exists():
+            try:
+                output_xlsx.unlink()
+            except:
+                pass
+                
+        if output_pdf.exists():
+            try:
+                output_pdf.unlink()
+            except:
+                pass
+                
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/convert-to-pdf/")
+async def convert_xlsx_to_pdf(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    include_header: Optional[str] = Form("true"),
+    include_footer: Optional[str] = Form("true"),
+    preserve_formatting: Optional[str] = Form("true"),
+    page_size: Optional[str] = Form("A4")  # A4 or letter
+):
+    """API endpoint to convert Excel file to PDF"""
+    unique_id = str(uuid.uuid4())
+    
+    try:
+        # Validate file extension
+        if not file.filename.lower().endswith('.xlsx'):
+            raise HTTPException(status_code=400, detail="Only .xlsx files are supported")
+        
+        # Save uploaded file
+        input_filename = UPLOAD_DIR / f"{unique_id}_{file.filename}"
+        output_filename = OUTPUT_DIR / f"{unique_id}_{file.filename.replace('.xlsx', '.pdf')}"
+        
+        with open(input_filename, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Convert boolean flags
+        include_header_bool = include_header.lower() == "true" if include_header else True
+        include_footer_bool = include_footer.lower() == "true" if include_footer else True
+        preserve_formatting_bool = preserve_formatting.lower() == "true" if preserve_formatting else True
+        
+        # Determine page size
+        from reportlab.lib.pagesizes import letter, A4
+        page_size_value = letter if page_size.lower() == "letter" else A4
+        
+        # Configure converter
+        config = {
+            'include_header': include_header_bool,
+            'include_footer': include_footer_bool,
+            'preserve_formatting': preserve_formatting_bool,
+            'page_size': page_size_value,
+            'footer_text': f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        }
+        
+        # Convert Excel to PDF
+        converter = XlsxToPdfConverter(config)
+        output_path = converter.convert(str(input_filename), str(output_filename))
         
         # Schedule cleanup task
         background_tasks.add_task(cleanup_old_files)
@@ -254,7 +361,7 @@ async def process_invoice_upload(
         
         return {
             "download_url": download_url,
-            "file_path": str(output_path)  # Include the file path in the response
+            "file_path": str(output_path)
         }
         
     except Exception as e:
@@ -280,10 +387,16 @@ async def download_file(file_name: str):
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="File not found")
     
+    # Determine MIME type based on file extension
+    if file_name.lower().endswith('.pdf'):
+        media_type = "application/pdf"
+    else:
+        media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    
     return FileResponse(
         path=file_path,
         filename=file_name.split('_', 1)[1],  # Remove UUID prefix
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        media_type=media_type
     )
 
 @app.get("/", response_class=HTMLResponse)
