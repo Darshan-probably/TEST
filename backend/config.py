@@ -130,3 +130,15 @@ def get_app_setting(setting_name):
         any: Setting value or None if not found
     """
     return APP_SETTINGS.get(setting_name)
+
+def get_pdf_settings(profile='default'):
+    """
+    Get PDF conversion settings for a specific profile
+    
+    Args:
+        profile (str): PDF settings profile identifier
+        
+    Returns:
+        dict: PDF settings dictionary
+    """
+    return PDF_CONVERSION_SETTINGS.get(profile, PDF_CONVERSION_SETTINGS['default']).copy()
