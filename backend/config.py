@@ -1,7 +1,8 @@
 # config.py
 """
-Configuration settings for the Invoice Processor application
+Configuration settings for the Excel Processor application
 """
+from reportlab.lib.pagesizes import letter, A4
 
 # Default template settings
 DEFAULT_TEMPLATE = {
@@ -63,6 +64,31 @@ TEMPLATE_CONFIGS = {
     'custom': CUSTOM_TEMPLATE,
 }
 
+# PDF conversion settings
+PDF_CONVERSION_SETTINGS = {
+    'default': {
+        'page_size': A4,
+        'include_header': True,
+        'include_footer': True,
+        'preserve_formatting': True,
+        'margin': 36,  # 0.5 inch in points
+    },
+    'compact': {
+        'page_size': A4,
+        'include_header': False,
+        'include_footer': False,
+        'preserve_formatting': True,
+        'margin': 18,  # 0.25 inch in points
+    },
+    'letter': {
+        'page_size': letter,
+        'include_header': True,
+        'include_footer': True,
+        'preserve_formatting': True,
+        'margin': 36,  # 0.5 inch in points
+    },
+}
+
 # Application settings
 APP_SETTINGS = {
     'upload_dir': 'uploads',
@@ -70,12 +96,14 @@ APP_SETTINGS = {
     'file_expiry_hours': 1,  # Files are deleted after this many hours
     'max_preview_rows': 20,  # Maximum number of rows to include in preview
     'allowed_extensions': ['.xlsx'],
+    'allowed_output_formats': ['xlsx', 'pdf'],
 }
 
 # API endpoints
 API_ENDPOINTS = {
     'process': '/process/',
     'preview': '/preview/',
+    'convert': '/convert-to-pdf/',
     'download': '/download/',
 }
 
