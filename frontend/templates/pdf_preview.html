@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Preview</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-20">PDF Preview</h1>
+        
+        <div class="card">
+            <div id="error-message" class="error-message hidden"></div>
+            
+            <div id="pdf-selector-container" class="form-group hidden">
+                <label for="pdf-selector">Select PDF:</label>
+                <select id="pdf-selector"></select>
+            </div>
+            
+            <div id="pdf-loader" class="loader"></div>
+            
+            <div id="no-pdfs" class="text-center hidden" style="padding: 30px;">
+                <div style="font-size: 48px; color: #aaa; margin-bottom: 15px;">📄</div>
+                <h3>No PDFs Available</h3>
+                <p>Please process an invoice in the Upload & Process tab first.</p>
+                <a href="/" class="btn">Go to Upload Tab</a>
+            </div>
+            
+            <div id="pdf-container" class="pdf-container hidden">
+                <iframe id="pdf-frame" class="pdf-frame" title="PDF Preview"></iframe>
+            </div>
+            
+            <div id="pdf-controls" class="flex justify-center gap-10 hidden">
+                <a id="open-pdf-btn" href="#" target="_blank" class="btn">Open in New Tab</a>
+                <a id="download-pdf-btn" href="#" download class="btn btn-success">Download PDF</a>
+                <button id="refresh-pdf-btn" class="btn btn-secondary">Refresh</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const pdfSelector = document.getElementById('pdf-selector');
+            const pdfSelectorContainer = document.getElementById('pdf-selector-container');
+            const pdfContainer = document.getElementById('pdf-container');
+            const pdfFrame = document.getElementById('pdf-frame');
+            const noPdfs = document.getElementById('no-pdfs');
+            const pdfLoader = document.getElementById('pdf-loader');
+            const pdfControls = document.getElementById('pdf-controls');
+            const openPdfBtn = document.getElementById('open-pdf-btn');
+            const downloadPdfBtn = document.getElementById('download-pdf-btn');
+            const refreshPdfBtn = document.getElementById('refresh-pdf-btn');
+            const errorMessage = document.getElementById('error-message');
+            
+            let pdfs = [];
+            
+            // Fetch the latest PDFs
+            async function fetchPdfs() {
+                showPdfLoader();
+                hideError();
+                
+                try {
+                    const response = await fetch('/api/latest-pdfs');
+                    const data = await response.json();
+                    
+                    if (data && data.pdfs && data.pdfs.length > 0) {
+                        pdfs = data.pdfs;
+                        populatePdfSelector();
+                        showPdfPreview(pdfs[0]);
+                    } else {
+                        showNoPdfs();
+                    }
+                } catch (error) {
+                    showError('Could not load PDF files. Please try again.');
+                    console.error('Error fetching PDFs:', error);
+                } finally {
+                    hidePdfLoader();
+                }
+            }
+            
+            // Populate the PDF selector dropdown
+            function populatePdfSelector() {
+                pdfSelector.innerHTML = '';
+                
+                pdfs.forEach(pdf => {
+                    const option = document.createElement('option');
+                    option.value = pdf;
+                    option.textContent = pdf;
+                    pdfSelector.appendChild(option);
+                });
+                
+                if (pdfs.length > 1) {
+                    pdfSelectorContainer.classList.remove('hidden');
+                } else {
+                    pdfSelectorContainer.classList.add('hidden');
+                }
+            }
+            
+            // Show the PDF preview
+            function showPdfPreview(pdfFilename) {
+                const pdfUrl = `/api/download/${pdfFilename}`;
+                pdfFrame.src = pdfUrl;
+                pdfContainer.classList.remove('hidden');
+                pdfControls.classList.remove('hidden');
+                
+                openPdfBtn.href = pdfUrl;
+                downloadPdfBtn.href = pdfUrl;
+            }
+            
+            // Show PDF loader
+            function showPdfLoader() {
+                pdfLoader.classList.remove('hidden');
+                pdfContainer.classList.add('hidden');
+                pdfControls.classList.add('hidden');
+            }
+            
+            // Hide PDF loader
+            function hidePdfLoader() {
+                pdfLoader.classList.add('hidden');
+            }
+            
+            // Show no PDFs message
+            function showNoPdfs() {
+                noPdfs.classList.remove('hidden');
+                pdfContainer.classList.add('hidden');
+                pdfControls.classList.add('hidden');
+                pdfSelectorContainer.classList.add('hidden');
+            }
+            
+            // Hide no PDFs message
+            function hideNoPdfs() {
+                noPdfs.classList.add('hidden');
+            }
+            
+            // Show error message
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.remove('hidden');
+            }
+            
+            // Hide error message
+            function hideError() {
+                errorMessage.classList.add('hidden');
+            }
+            
+            // Event handlers
+            pdfSelector.addEventListener('change', function() {
+                showPdfPreview(this.value);
+            });
+            
+            refreshPdfBtn.addEventListener('click', function() {
+                fetchPdfs();
+            });
+            
+            // Initialize
+            fetchPdfs();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Automation System</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="icon" type="image/svg+xml" href="/static/images/favicon.svg">
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-20">Invoice Automation System</h1>
+        
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <div class="tab active" data-tab="upload">Upload & Process</div>
+            <div class="tab" data-tab="preview">PDF Preview</div>
+            <div class="tab" data-tab="help">How It Works</div>
+        </div>
+        
+        <!-- Upload & Process Tab -->
+        <div id="upload-tab" class="tab-content active card">
+            <div id="error-message" class="error-message hidden"></div>
+            
+            <div id="success-message" class="success-message hidden">
+                <div class="success-icon">✓</div>
+                <h2>Processing Complete!</h2>
+                <p>Your invoice has been processed successfully.</p>
+                
+                <div id="output-path" class="mb-20 text-center"></div>
+                
+                <div class="flex justify-center gap-10">
+                    <a id="download-link" href="#" class="btn btn-success">Download Processed File</a>
+                    <button id="process-another" class="btn btn-secondary">Process Another File</button>
+                </div>
+            </div>
+            
+            <form id="upload-form">
+                <!-- Template Selection -->
+                <div class="form-group">
+                    <label for="template-type">Template Type</label>
+                    <select id="template-type" name="template_type">
+                        <option value="default">Default Template</option>
+                        <option value="invoice1">Invoice Template 1</option>
+                        <option value="invoice2">Invoice Template 2</option>
+                        <option value="custom">Custom Template</option>
+                    </select>
+                </div>
+                
+                <!-- File Upload -->
+                <div class="upload-area" id="upload-area">
+                    <input type="file" id="file-input" name="file" class="hidden" accept=".xlsx">
+                    <div class="upload-icon">📁</div>
+                    <h3>Click to select Excel file</h3>
+                    <p>Only .xlsx files accepted</p>
+                    <div id="file-info" class="file-info hidden"></div>
+                </div>
+                
+                <!-- Processing Options -->
+                <div class="processing-options">
+                    <h3>Processing Options</h3>
+                    
+                    <div class="grid">
+                        <div class="form-group">
+                            <label for="bags">Number of Bags</label>
+                            <input type="number" id="bags" name="bags" placeholder="Auto-detect">
+                        </div>
+                        <div class="form-group">
+                            <label for="weight">Total Weight (kg)</label>
+                            <input type="number" id="weight" name="weight" step="0.01" placeholder="Auto-detect">
+                        </div>
+                    </div>
+                    
+                    <!-- Document Information -->
+                    <div class="form-group mb-20">
+                        <h4>Document Information (Optional)</h4>
+                        <div class="grid">
+                            <div class="form-group">
+                                <label for="date">Date</label>
+                                <input type="date" id="date" name="date">
+                            </div>
+                            <div class="form-group">
+                                <label for="lot-number">Lot Number</label>
+                                <input type="text" id="lot-number" name="lot_number" placeholder="Enter lot number">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="name" placeholder="Enter name">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <textarea id="address" name="address" rows="2" placeholder="Enter address"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Advanced Options Toggle -->
+                    <div class="toggle-section">
+                        <button type="button" class="toggle-button" id="toggle-advanced">
+                            Show Advanced Options
+                            <span id="toggle-icon">▼</span>
+                        </button>
+                        
+                        <div id="advanced-options" class="toggle-content">
+                            <div class="grid">
+                                <div class="form-group">
+                                    <label for="min-percent">Min Variation %</label>
+                                    <input type="number" id="min-percent" name="min_percent" step="0.1" value="-2">
+                                </div>
+                                <div class="form-group">
+                                    <label for="max-percent">Max Variation %</label>
+                                    <input type="number" id="max-percent" name="max_percent" step="0.1" value="2">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="preserve-wrapping" name="preserve_wrapping" checked>
+                                    Preserve text wrapping
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex justify-between">
+                    <button type="button" id="preview-button" class="btn btn-secondary" disabled>
+                        <span id="preview-icon">👁️</span> Preview
+                    </button>
+                    
+                    <button type="submit" id="process-button" disabled>
+                        <span id="process-icon">📤</span> Process Invoice
+                    </button>
+                </div>
+                
+                <!-- Preview Section -->
+                <div id="preview-section" class="hidden" style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
+                    <h2 class="flex justify-between">
+                        <span>Invoice Preview</span>
+                        <button type="button" id="close-preview" class="btn btn-secondary">Close Preview</button>
+                    </h2>
+                    
+                    <div id="preview-data"></div>
+                </div>
+            </form>
+        </div>
+        
+        <!-- PDF Preview Tab -->
+        <div id="preview-tab" class="tab-content card">
+            <div id="pdf-error-message" class="error-message hidden"></div>
+            
+            <div id="pdf-loader" class="loader"></div>
+            
+            <div id="no-pdfs" class="text-center hidden" style="padding: 30px;">
+                <div style="font-size: 48px; color: #aaa; margin-bottom: 15px;">📄</div>
+                <h3>No PDFs Available</h3>
+                <p>Please process an invoice in the Upload & Process tab first.</p>
+            </div>
+            
+            <div id="pdf-selector-container" class="form-group hidden">
+                <label for="pdf-selector">Select PDF:</label>
+                <select id="pdf-selector"></select>
+            </div>
+            
+            <div id="pdf-container" class="pdf-container hidden">
+                <iframe id="pdf-frame" class="pdf-frame" title="PDF Preview"></iframe>
+            </div>
+            
+            <div id="pdf-controls" class="flex justify-center gap-10 hidden">
+                <a id="open-pdf-btn" href="#" target="_blank" class="btn">Open in New Tab</a>
+                <a id="download-pdf-btn" href="#" download class="btn btn-success">Download PDF</a>
+                <button id="refresh-pdf-btn" class="btn btn-secondary">Refresh</button>
+            </div>
+        </div>
+        
+        <!-- How It Works Tab -->
+        <div id="help-tab" class="tab-content card">
+            <h2>How the Invoice Processor Works</h2>
+            
+            <div class="card" style="margin-bottom: 15px;">
+                <h3>1. Upload Your Excel Invoice</h3>
+                <p>Start by uploading your Excel invoice file (.xlsx) using the Upload & Process tab. The system supports various invoice templates.</p>
+            </div>
+            
+            <div class="card" style="margin-bottom: 15px;">
+                <h3>2. Configure Processing Options</h3>
+                <p>Specify the number of bags, total weight, and other document information. You can also adjust advanced settings like weight variation percentages.</p>
+            </div>
+            
+            <div class="card" style="margin-bottom: 15px;">
+                <h3>3. Process the Invoice</h3>
+                <p>Click the "Process Invoice" button to start processing. The system will distribute weights according to your specifications and generate the output file.</p>
+            </div>
+            
+            <div class="card">
+                <h3>4. Preview and Download</h3>
+                <p>Once processing is complete, you can preview the generated PDF and download it. The system preserves formatting and ensures accurate weight distribution.</p>
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <h3>Supported Features</h3>
+                <ul>
+                    <li>Excel to PDF conversion with preserved formatting</li>
+                    <li>Smart weight distribution with customizable variation</li>
+                    <li>Multiple invoice template support</li>
+                    <li>Preview functionality for quick checking</li>
+                    <li>Document information customization</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
