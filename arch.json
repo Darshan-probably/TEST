@@ -1,0 +1,140 @@
+{
+  "additional-repositories": [],
+  "archinstall-language": "English",
+  "audio_config": null,
+  "bootloader": "Grub",
+  "debug": false,
+  "disk_config": {
+    "config_type": "manual_partitioning",
+    "device_modifications": [
+      {
+        "device": "/dev/sda",
+        "partitions": [
+          {
+            "btrfs": [],
+            "flags": [
+              "boot"
+            ],
+            "fs_type": "fat32",
+            "length": {
+              "sector_size": null,
+              "total_size": null,
+              "unit": "GiB",
+              "value": 1
+            },
+            "mount_options": [],
+            "mountpoint": "/boot",
+            "obj_id": "369f31a8-2781-4d6b-96e7-75680552b7c9",
+            "start": {
+              "sector_size": {
+                "sector_size": null,
+                "total_size": null,
+                "unit": "B",
+                "value": 512
+              },
+              "total_size": null,
+              "unit": "sectors",
+              "value": 34
+            },
+            "status": "create",
+            "type": "primary"
+          },
+          {
+            "btrfs": [],
+            "flags": [],
+            "fs_type": "linux-swap",
+            "length": {
+              "sector_size": null,
+              "total_size": null,
+              "unit": "GiB",
+              "value": 2
+            },
+            "mount_options": [],
+            "mountpoint": null,
+            "obj_id": "13cf2c96-8b0f-4ade-abaa-c530be589aad",
+            "start": {
+              "sector_size": {
+                "sector_size": null,
+                "total_size": null,
+                "unit": "B",
+                "value": 512
+              },
+              "total_size": null,
+              "unit": "GiB",
+              "value": 1
+            },
+            "status": "create",
+            "type": "primary"
+          },
+          {
+            "btrfs": [],
+            "flags": [],
+            "fs_type": "ext4",
+            "length": {
+              "sector_size": null,
+              "total_size": null,
+              "unit": "GiB",
+              "value": 13
+            },
+            "mount_options": [],
+            "mountpoint": "/",
+            "obj_id": "3e75d045-21a4-429d-897e-8ec19a006e8b",
+            "start": {
+              "sector_size": {
+                "sector_size": null,
+                "total_size": null,
+                "unit": "B",
+                "value": 512
+              },
+              "total_size": null,
+              "unit": "GiB",
+              "value": 3
+            },
+            "status": "create",
+            "type": "primary"
+          }
+        ],
+        "wipe": false
+      }
+    ]
+  },
+  "disk_encryption": null,
+  "hostname": "Kitty",
+  "kernels": [
+    "linux"
+  ],
+  "locale_config": {
+    "kb_layout": "us",
+    "sys_enc": "UTF-8",
+    "sys_lang": "en_US"
+  },
+  "mirror_config": {
+    "custom_servers": [],
+    "mirror_regions": {
+      "India": [
+        "http://mirror.cse.iitk.ac.in/archlinux/$repo/os/$arch",
+        "https://mirrors.piconets.webwerks.in/archlinux-mirror/$repo/os/$arch"
+      ]
+    },
+    "optional_repositories": [],
+    "custom_repositories": []
+  },
+  "network_config": {},
+  "no_pkg_lookups": false,
+  "ntp": true,
+  "offline": false,
+  "packages": [],
+  "parallel downloads": 0,
+  "profile_config": {
+    "profile": {
+      "details": ["minimal"],
+      "main": "Desktop"
+    }
+  },
+  "save_config": null,
+  "script": "guided",
+  "silent": false,
+  "swap": true,
+  "timezone": "Asia/Kolkata",
+  "version": "2.6.0"
+}
